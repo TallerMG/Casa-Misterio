@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#693b2f">
+  <title>Casa-Misterio</title>
+  <style>
+    :root {
+      --oscuro: #693b2f;
+      --terracota: #8d4632;
+      --crema: #fbf4ed;
+      --texto: #322823;
+      --verde: #245d40;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--crema); color: var(--texto); font: 18px/1.55 Arial, sans-serif; }
+    header { background: var(--oscuro); color: white; padding: 22px 5%; }
+    header h1 { margin: 0; font-size: clamp(26px, 4vw, 38px); line-height: 1.2; }
+    nav { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 12px; }
+    nav a { color: white; text-underline-offset: 4px; }
+    main { max-width: 1050px; margin: auto; padding: 24px 18px 65px; }
+    .tarjeta { background: white; border: 2px solid #e3c7b4; border-radius: 18px; padding: 24px; margin: 20px 0; box-shadow: 0 3px 10px #4c2b1d12; }
+    .presentacion { display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: center; }
+    .casa { font-size: 110px; text-align: center; }
+    h2 { color: var(--oscuro); line-height: 1.25; }
+    h3 { color: var(--terracota); font-size: 1.35rem; margin: 8px 0; }
+    .etiqueta { font-size: 15px; font-weight: bold; color: var(--terracota); }
+    .pista, .regla { padding: 12px; border-radius: 8px; background: #fff5df; border-left: 5px solid #a46b18; }
+    .regla { margin: 14px 0; }
+    .opciones { display: grid; gap: 10px; margin: 16px 0; }
+    .opcion { display: flex; align-items: flex-start; gap: 12px; border: 2px solid #d6bca9; border-radius: 12px; padding: 12px; cursor: pointer; }
+    .opcion:focus-within { border-color: var(--terracota); background: #fff1e4; }
+    input[type="radio"] { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--terracota); }
+    button, .boton { display: inline-block; border: 2px solid var(--oscuro); border-radius: 12px; background: var(--terracota); color: white; padding: 12px 18px; font: bold 18px Arial, sans-serif; text-decoration: none; cursor: pointer; min-height: 48px; margin: 6px 6px 6px 0; }
+    button:hover, button:focus-visible, .boton:hover, .boton:focus-visible { background: var(--oscuro); }
+    .secundario { background: white; color: var(--oscuro); }
+    button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #1565c0; outline-offset: 3px; }
+    details { margin: 10px 0; }
+    summary { color: var(--oscuro); font-weight: bold; cursor: pointer; padding: 8px 0; }
+    .respuesta { min-height: 32px; border-radius: 8px; font-weight: bold; }
+    .respuesta:not(:empty) { padding: 10px 12px; }
+    .correcta { background: #e2f3e8; color: #194d31; }
+    .incorrecta { background: #fff0e8; color: #853d25; }
+    .completada { border-color: var(--verde); }
+    .estado { color: var(--verde); font-weight: bold; }
+    .progreso-exterior { height: 26px; overflow: hidden; border-radius: 18px; background: #ead9ca; border: 1px solid #b89885; }
+    #progresoRelleno { height: 100%; width: 0%; background: var(--verde); transition: width 300ms ease; }
+    #progresoTexto { font-weight: bold; }
+    .simulador { background: #f9ede2; padding: 18px; border-radius: 14px; }
+    .pantalla { display: inline-block; background: #564e49; color: white; border-radius: 12px; padding: 15px 22px; font-size: 28px; min-width: 125px; text-align: center; }
+    .pantalla.activa { background: #e9b83f; color: #30200a; }
+    .pequeno { font-size: 16px; }
+    footer { text-align: center; padding: 20px; }
+    @media (max-width: 650px) {
+      .presentacion { grid-template-columns: 1fr; }
+      .casa { font-size: 76px; }
+      .tarjeta { padding: 17px; }
+      button, .boton { width: 100%; text-align: center; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } #progresoRelleno { transition: none; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🏠 Casa-Misterio</h1>
+  <nav aria-label="Navegación de la actividad">
+    <a href="#inicio">Inicio</a>
+    <a href="#misiones">Misiones</a>
+    <a href="#cierre">Cierre</a>
+  </nav>
+</header>
+
+<main>
+  <section id="inicio" class="tarjeta presentacion">
+    <div>
+      <h2>¿Podés despertar la casa?</h2>
+      <p>La casa tiene cuatro sistemas secretos. Para activarlos, vas a descubrir cómo una <strong>micro:bit</strong> toma decisiones con <strong>si / si no</strong>.</p>
+      <p>Leé cada situación, elegí una respuesta y comprobá qué ocurre. Podés volver a intentarlo.</p>
+      <a class="boton" href="#misiones">Empezar las misiones</a>
+    </div>
+    <div class="casa" role="img" aria-label="Ilustración de una casa">🏠</div>
+  </section>
+
+  <section class="tarjeta" aria-labelledby="tituloProgreso">
+    <h2 id="tituloProgreso">Tu progreso</h2>
+    <div id="barraProgreso" class="progreso-exterior" role="progressbar" aria-label="Misiones completadas" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0">
+      <div id="progresoRelleno"></div>
+    </div>
+    <p id="progresoTexto" aria-live="polite">0 de 4 misiones completadas · 0 puntos</p>
+  </section>
+
+  <section id="misiones" aria-labelledby="tituloMisiones">
+    <h2 id="tituloMisiones">Las cuatro misiones</h2>
+
+    <!-- Las misiones están en HTML: se ven incluso si JavaScript no se ejecuta. -->
+    <article class="tarjeta mision" id="mision1" data-correcta="0" data-resultado="La lámpara del ático se encendió." data-icono="💡">
+      <span class="etiqueta">MISIÓN 1 DE 4</span>
+      <h3>🔦 El ático oscuro</h3>
+      <p>El ático está oscuro. La micro:bit recibe un valor de luz de 20.</p>
+      <p class="regla"><strong>Regla de la casa:</strong> Si la luz es menor que 50, encender la lámpara. Si no, apagarla.</p>
+      <p id="pregunta1"><strong>¿Qué debe hacer la lámpara?</strong></p>
+      <div class="opciones" role="group" aria-labelledby="pregunta1">
+        <label class="opcion"><input type="radio" name="respuesta1" value="0"> Encenderse</label>
+        <label class="opcion"><input type="radio" name="respuesta1" value="1"> Apagarse</label>
+        <label class="opcion"><input type="radio" name="respuesta1" value="2"> Cambiar la temperatura</label>
+      </div>
+      <button type="button" class="comprobar">Comprobar respuesta</button>
+      <details><summary>Ver pista</summary><p class="pista">Compará 20 con 50. ¿20 es menor que 50?</p></details>
+      <p class="respuesta" role="status" aria-live="polite"></p>
+      <p class="estado" hidden>✓ Misión completada</p>
+    </article>
+
+    <article class="tarjeta mision" id="mision2" data-correcta="1" data-resultado="La puerta se mantuvo cerrada. ¡Sistema seguro!" data-icono="🔒">
+      <span class="etiqueta">MISIÓN 2 DE 4</span>
+      <h3>🚪 La puerta secreta</h3>
+      <p>La puerta se abre con el código 1234. Alguien escribe 1111.</p>
+      <p class="regla"><strong>Regla de la casa:</strong> Si el código es 1234, abrir la puerta. Si no, mantenerla cerrada.</p>
+      <p id="pregunta2"><strong>¿Qué sucede con la puerta?</strong></p>
+      <div class="opciones" role="group" aria-labelledby="pregunta2">
+        <label class="opcion"><input type="radio" name="respuesta2" value="0"> Se abre</label>
+        <label class="opcion"><input type="radio" name="respuesta2" value="1"> Permanece cerrada</label>
+        <label class="opcion"><input type="radio" name="respuesta2" value="2"> Enciende la luz</label>
+      </div>
+      <button type="button" class="comprobar">Comprobar respuesta</button>
+      <details><summary>Ver pista</summary><p class="pista">¿1111 es igual a 1234?</p></details>
+      <p class="respuesta" role="status" aria-live="polite"></p>
+      <p class="estado" hidden>✓ Misión completada</p>
+    </article>
+
+    <article class="tarjeta mision" id="mision3" data-correcta="1" data-resultado="La micro:bit mostró un sol." data-icono="☀️">
+      <span class="etiqueta">MISIÓN 3 DE 4</span>
+      <h3>🪟 La ventana iluminada</h3>
+      <p>La casa usa un sensor de luz. Ahora el sensor marca 80.</p>
+      <p class="regla"><strong>Regla de la casa:</strong> Si la luz es menor que 40, mostrar una luna en la micro:bit. Si no, mostrar un sol.</p>
+      <p id="pregunta3"><strong>¿Qué imagen aparece en la pantalla?</strong></p>
+      <div class="opciones" role="group" aria-labelledby="pregunta3">
+        <label class="opcion"><input type="radio" name="respuesta3" value="0"> Una luna</label>
+        <label class="opcion"><input type="radio" name="respuesta3" value="1"> Un sol</label>
+        <label class="opcion"><input type="radio" name="respuesta3" value="2"> Un corazón</label>
+      </div>
+      <button type="button" class="comprobar">Comprobar respuesta</button>
+      <details><summary>Ver pista</summary><p class="pista">80 no es menor que 40. Seguí el camino «si no».</p></details>
+      <p class="respuesta" role="status" aria-live="polite"></p>
+      <p class="estado" hidden>✓ Misión completada</p>
+    </article>
+
+    <article class="tarjeta mision" id="mision4" data-correcta="1" data-resultado="La alarma se activó para avisar del calor." data-icono="⚠️">
+      <span class="etiqueta">MISIÓN 4 DE 4</span>
+      <h3>🌡️ La alarma de temperatura</h3>
+      <p>El sensor mide 32 °C en una habitación.</p>
+      <p class="regla"><strong>Regla de la casa:</strong> Si la temperatura es mayor que 30 °C, mostrar una alerta. Si no, mostrar una cara feliz.</p>
+      <p id="pregunta4"><strong>¿Qué debe mostrar la micro:bit?</strong></p>
+      <div class="opciones" role="group" aria-labelledby="pregunta4">
+        <label class="opcion"><input type="radio" name="respuesta4" value="0"> Una cara feliz</label>
+        <label class="opcion"><input type="radio" name="respuesta4" value="1"> Una alerta</label>
+        <label class="opcion"><input type="radio" name="respuesta4" value="2"> Nada</label>
+      </div>
+      <button type="button" class="comprobar">Comprobar respuesta</button>
+      <details><summary>Ver pista</summary><p class="pista">¿32 es mayor que 30?</p></details>
+      <p class="respuesta" role="status" aria-live="polite"></p>
+      <p class="estado" hidden>✓ Misión completada</p>
+    </article>
+  </section>
+
+  <section id="cierre" class="tarjeta">
+    <h2>El secreto de la casa</h2>
+    <p id="textoFinal" aria-live="polite">Completá las cuatro misiones para despertar la casa.</p>
+    <div class="simulador">
+      <strong>Simulador de la casa</strong>
+      <p>Estado de los sistemas: <span id="estadoCasa" aria-live="polite">En espera</span></p>
+      <div id="pantallaCasa" class="pantalla" role="img" aria-label="Pantalla LED apagada">·····</div>
+      <p class="pequeno">Cuando resolvés una misión, la casa responde.</p>
+    </div>
+    <button id="reiniciar" class="secundario" type="button">Reiniciar actividad</button>
+    <noscript><p class="pista">Las preguntas se pueden leer, pero para comprobar las respuestas y usar la barra de progreso tenés que habilitar JavaScript en el navegador.</p></noscript>
+  </section>
+</main>
+
+<footer>Actividad educativa · Micro:bit, decisiones y pensamiento computacional</footer>
+
+<script>
+  // DOM: seleccionamos las misiones y escuchamos los clics de los estudiantes.
+  const misiones = document.querySelectorAll('.mision');
+  const completadas = new Set();
+  const barra = document.querySelector('#barraProgreso');
+  const relleno = document.querySelector('#progresoRelleno');
+  const progresoTexto = document.querySelector('#progresoTexto');
+
+  function actualizarProgreso() {
+    const cantidad = completadas.size;
+    relleno.style.width = (cantidad / misiones.length * 100) + '%';
+    barra.setAttribute('aria-valuenow', String(cantidad));
+    progresoTexto.textContent = `${cantidad} de ${misiones.length} misiones completadas · ${cantidad * 25} puntos`;
+    const faltan = misiones.length - cantidad;
+    document.querySelector('#textoFinal').textContent = faltan === 0
+      ? '🎉 ¡Felicitaciones! Despertaste la casa. Aprendiste que una condición permite decidir qué hacer según los datos.'
+      : `Te faltan ${faltan} ${faltan === 1 ? 'misión' : 'misiones'} para despertar la casa.`;
+  }
+
+  misiones.forEach((mision, indice) => {
+    mision.querySelector('.comprobar').addEventListener('click', () => {
+      const elegida = mision.querySelector('input[type="radio"]:checked');
+      const respuesta = mision.querySelector('.respuesta');
+
+      if (!elegida) {
+        respuesta.textContent = 'Elegí una respuesta antes de comprobar.';
+        respuesta.className = 'respuesta incorrecta';
+        return;
+      }
+      if (Number(elegida.value) !== Number(mision.dataset.correcta)) {
+        respuesta.textContent = 'Todavía no. Revisá la regla «si / si no» y volvé a intentar.';
+        respuesta.className = 'respuesta incorrecta';
+        return;
+      }
+
+      completadas.add(indice); // Set evita sumar puntos dos veces.
+      respuesta.textContent = '¡Correcto! ' + mision.dataset.resultado;
+      respuesta.className = 'respuesta correcta';
+      mision.classList.add('completada');
+      mision.querySelector('.estado').hidden = false;
+      document.querySelector('#estadoCasa').textContent = mision.dataset.resultado;
+      const pantalla = document.querySelector('#pantallaCasa');
+      pantalla.classList.add('activa');
+      pantalla.textContent = mision.dataset.icono;
+      pantalla.setAttribute('aria-label', mision.dataset.resultado);
+      actualizarProgreso();
+    });
+  });
+
+  document.querySelector('#reiniciar').addEventListener('click', () => {
+    completadas.clear();
+    misiones.forEach(mision => {
+      mision.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+      const respuesta = mision.querySelector('.respuesta');
+      respuesta.textContent = '';
+      respuesta.className = 'respuesta';
+      mision.classList.remove('completada');
+      mision.querySelector('.estado').hidden = true;
+      mision.querySelector('details').open = false;
+    });
+    document.querySelector('#estadoCasa').textContent = 'En espera';
+    const pantalla = document.querySelector('#pantallaCasa');
+    pantalla.className = 'pantalla';
+    pantalla.textContent = '·····';
+    pantalla.setAttribute('aria-label', 'Pantalla LED apagada');
+    actualizarProgreso();
+    document.querySelector('#inicio').scrollIntoView({ behavior: 'smooth' });
+  });
+</script>
+</body>
+</html>
